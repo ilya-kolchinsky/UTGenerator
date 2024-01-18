@@ -8,21 +8,25 @@ UNIT_TEST_PATH = "unit_test.py"
 SCENARIOS_PATH = "scenarios.txt"
 
 
-def extend_test_suite(test_builder, llm, scenario_generation_prompt, class_to_test, is_basic_scenario_prompt=True):
-
-    # send the scenario description query and parse the result
-    print("Generating list of scenarios to test...", end='')
-    scenario_description_reply = llm.execute_prompt(scenario_generation_prompt,
-                                                    save_prompt_and_reply=is_basic_scenario_prompt,
-                                                    use_history=not is_basic_scenario_prompt)
-    scenario_analyzer = ScenarioAnalyzer(scenario_description_reply)
-    print("Done.")
-    print(f'Generated {len(scenario_analyzer.positive)} normal and {len(scenario_analyzer.negative)} abnormal flows to be tested.')
-
+def generate_tests_for_scenarios(scenario_analyzer, test_builder, llm, class_to_test):
     # for each scenario:
     #    create a query asking to write a UT for it
     #    send the query and obtain the result
     #    add the resulting test to the UT class
+
+    if len(scenario_analyzer.all) > 0:
+        # only positive or only negative scenarios were produced (or the parsing module failed to distinguish between them)
+        print(f'Generated {len(scenario_analyzer.all)} flows to be tested.')
+        for index, scenario in enumerate(scenario_analyzer.all):
+            print(f'Generating tests for flow {index + 1}...', end='')
+            prompt = UTGenerationPrompts.get_single_scenario_prompt(class_to_test, scenario, False)
+            test_builder.add_method(llm.execute_prompt(prompt))
+            print("Done.")
+        return
+
+    # both normal and abnormal flows were generated
+    print(f'Generated {len(scenario_analyzer.positive)} normal and {len(scenario_analyzer.negative)} abnormal flows to be tested.')
+
     for index, scenario in enumerate(scenario_analyzer.positive):
         print(f'Generating tests for normal flow {index + 1}...', end='')
         prompt = UTGenerationPrompts.get_single_scenario_prompt(class_to_test, scenario, False)
@@ -34,10 +38,23 @@ def extend_test_suite(test_builder, llm, scenario_generation_prompt, class_to_te
         test_builder.add_method(llm.execute_prompt(prompt))
         print("Done.")
 
+
+def extend_test_suite(test_builder, llm, scenario_generation_prompt, class_to_test, is_basic_scenario_prompt=True):
+
+    # send the scenario description query and parse the result
+    print("Generating list of scenarios to test...", end='')
+    scenario_description_reply = llm.execute_prompt(scenario_generation_prompt,
+                                                    save_prompt_and_reply=is_basic_scenario_prompt,
+                                                    use_history=not is_basic_scenario_prompt)
+    scenario_analyzer = ScenarioAnalyzer(scenario_description_reply)
+    print("Done.")
+
     # serialize the scenarios received from an LLM for future reference
     # TODO: when multiple extend_test_suite calls will be supported, change write mode to append mode
     with open(SCENARIOS_PATH, 'w') as f:
         f.write(scenario_description_reply)
+
+    generate_tests_for_scenarios(scenario_analyzer, test_builder, llm, class_to_test)
 
 
 def main():
