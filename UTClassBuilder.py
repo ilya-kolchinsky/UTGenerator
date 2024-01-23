@@ -21,12 +21,6 @@ class UTClassBuilder(object):
         ut_instance = self.__code_to_class_instance(class_code) if PRODUCE_CLASS_INSTANCE else None
         return class_code, ut_instance
 
-    def can_improve_unit_test(self):
-        # this method implements a strategy for incrementally extending the test suite following the initial attempt
-        # for now, we assume one iteration is enough and always return False here
-        # TODO: implement a smarter strategy
-        return False
-
     @staticmethod
     def __skeleton_from_query_reply(skeleton_query_reply):
         test_skeleton_match = SKELETON_REGEX.search(skeleton_query_reply)

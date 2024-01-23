@@ -32,4 +32,4 @@ class UTGenerationPrompts(object):
 
     @staticmethod
     def get_incremental_verbal_description_prompt():
-        raise NotImplementedError()  # TODO: will be supported at some future point
+        return "Please provide more of the normal and abnormal flows in addition to those mentioned above."
