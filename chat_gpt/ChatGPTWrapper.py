@@ -1,9 +1,12 @@
 import os
+
+import time
 from dotenv import load_dotenv
 import openai
 
 from LLMWrapper import LLMWrapper
 
+RATE_LIMIT_WAIT_TIME = 480  # 8 minutes
 
 class ChatGPTWrapper(LLMWrapper):
     def _set_up(self):
@@ -21,10 +24,21 @@ class ChatGPTWrapper(LLMWrapper):
 
         new_message = {"role": "user", "content": prompt}
         messages = self.__saved_messages+[new_message] if use_history else [new_message]
-        completion = self.__openai_client.chat.completions.create(
-            model="gpt-3.5-turbo",
-            messages=messages
-        )
+
+        query_executed = False
+        while not query_executed:
+            try:
+                completion = self.__openai_client.chat.completions.create(
+                    model="gpt-3.5-turbo",
+                    messages=messages
+                )
+                query_executed = True
+            except openai.RateLimitError as e:
+                # a simple mechanism to overcome the rate limit
+                print(f"Rate limit reached, error details:\n{e}")
+                print(f"Going to sleep for {RATE_LIMIT_WAIT_TIME} seconds.")
+                time.sleep(RATE_LIMIT_WAIT_TIME)
+                print('\n')
 
         response = completion.choices[0].message.content
         if save_prompt_and_reply:

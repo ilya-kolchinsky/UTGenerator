@@ -6,12 +6,14 @@ from chat_gpt.ChatGPTWrapper import ChatGPTWrapper
 class LLMWrapperFactory(object):
 
     @staticmethod
-    def create_llm_wrapper(subclass_name):
+    def create_llm_wrapper(llm_type):
 
-        # assuming subclass_name is a subclass of LLMWrapper that is defined in an imported module
+        wrapper_subclass_name = f"{llm_type}Wrapper"
+
+        # assuming wrapper_subclass_name is a subclass of LLMWrapper that is defined in an imported module
         try:
-            subclass = globals()[subclass_name]
+            subclass = globals()[wrapper_subclass_name]
             return subclass()
         except ImportError:
-            print(f"Unknown LLM type: {subclass_name}")
+            print(f"Unknown LLM type: {wrapper_subclass_name}")
             raise

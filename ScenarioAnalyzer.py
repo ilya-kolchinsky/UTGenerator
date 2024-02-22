@@ -9,7 +9,7 @@ SINGLE_SCENARIO_REGEX = re.compile(r'^((\d+\.)|( ?- ))(.*?)((\n(?=^\d|\n))|\Z)',
 
 class ScenarioAnalyzer(object):
 
-    MAX_IMPROVEMENT_ITERATIONS = 2
+    MAX_IMPROVEMENT_ITERATIONS = 1
 
     DISTANCE_THRESHOLD = 0.3
 
